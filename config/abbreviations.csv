@@ -1,0 +1,162 @@
+Abbreviation,Full_Name
+# Patient and History
+Pt,Patient
+pt,Patient
+Hx,History
+PMH,Past medical history
+PSH,Past surgical history
+FH,Family history
+SH,Social history
+ROS,Review of systems
+c/o,Complains of
+h/o,History of
+s/p,Status post
+S/P,Status post
+yo,year old
+y/o,year old
+# Symptoms and Findings
+SOB,Shortness of breath
+DOE,Dyspnea on exertion
+CP,Chest pain
+HA,Headache
+N/V,Nausea and vomiting
+LOC,Loss of consciousness
+SI,Suicidal ideation
+HI,Homicidal ideation
+Palp,Palpitations
+PND,Paroxysmal nocturnal dyspnea
+# Cardiovascular
+HTN,Hypertension
+HLD,Hyperlipidemia
+CAD,Coronary artery disease
+HF,Heart failure
+CHF,Congestive heart failure
+MI,Myocardial infarction
+NSTEMI,Non-ST elevation myocardial infarction
+STEMI,ST elevation myocardial infarction
+AF,Atrial fibrillation
+Afib,Atrial fibrillation
+SVT,Supraventricular tachycardia
+VT,Ventricular tachycardia
+VF,Ventricular fibrillation
+DVT,Deep vein thrombosis
+BP,Blood pressure
+HR,Heart rate
+# Respiratory
+RR,Respiratory rate
+SpO2,Oxygen saturation
+COPD,Chronic obstructive pulmonary disease
+PE,Pulmonary embolism
+CAP,Community acquired pneumonia
+ARDS,Acute respiratory distress syndrome
+ABG,Arterial blood gas
+RA,Room air
+O2,Oxygen
+# Neurology
+CVA,Stroke
+TIA,Transient ischemic attack
+ICH,Intracranial hemorrhage
+SAH,Subarachnoid hemorrhage
+GCS,Glasgow Coma Scale
+# Gastrointestinal
+GERD,Gastroesophageal reflux disease
+IBD,Inflammatory bowel disease
+UC,Ulcerative colitis
+CD,Crohns disease
+NPO,Nothing by mouth
+UGIB,Upper gastrointestinal bleeding
+LGIB,Lower gastrointestinal bleeding
+# Renal
+AKI,Acute kidney injury
+CKD,Chronic kidney disease
+UTI,Urinary tract infection
+ESRD,End stage renal disease
+# Lab Values
+CBC,Complete blood count
+BMP,Basic metabolic panel
+CMP,Comprehensive metabolic panel
+CRP,C reactive protein
+ESR,Erythrocyte sedimentation rate
+Hb,Hemoglobin
+Hgb,Hemoglobin
+WBC,White blood cell count
+Plt,Platelet count
+Na,Sodium
+K,Potassium
+Cl,Chloride
+Ca,Calcium
+Mg,Magnesium
+BUN,Blood urea nitrogen
+Cr,Creatinine
+HbA1c,Glycated hemoglobin
+TSH,Thyroid stimulating hormone
+T4,Thyroxine
+INR,International normalized ratio
+aPTT,Activated partial thromboplastin time
+LFT,Liver function test
+# Medications and Administration
+IV,Intravenous
+PO,Oral
+IM,Intramuscular
+SC,Subcutaneous
+SQ,Subcutaneous
+PRN,As needed
+STAT,Immediately
+BID,Twice daily
+TID,Three times daily
+QID,Four times daily
+qHS,At bedtime
+qd,Daily
+qod,Every other day
+ASA,Aspirin
+NSAID,Non-steroidal anti-inflammatory drug
+ACE,Angiotensin converting enzyme
+ARB,Angiotensin receptor blocker
+BB,Beta blocker
+CCB,Calcium channel blocker
+PPI,Proton pump inhibitor
+# Diagnosis and Treatment
+Dx,Diagnosis
+DDx,Differential diagnosis
+Tx,Treatment
+Rx,Prescription
+FU,Follow up
+f/u,Follow up
+# Location and Anatomy
+RLQ,Right lower quadrant
+LLQ,Left lower quadrant
+RUQ,Right upper quadrant
+LUQ,Left upper quadrant
+LE,Lower extremity
+UE,Upper extremity
+LLE,Left lower extremity
+RLE,Right lower extremity
+LUE,Left upper extremity
+RUE,Right upper extremity
+# Hospital
+LOS,Length of stay
+ICU,Intensive care unit
+CCU,Cardiac care unit
+ER,Emergency room
+ED,Emergency department
+OPD,Outpatient department
+PACU,Post anesthesia care unit
+# Imaging
+ECG,Electrocardiogram
+EKG,Electrocardiogram
+Echo,Echocardiography
+CXR,Chest X ray
+CT,Computed tomography
+MRI,Magnetic resonance imaging
+US,Ultrasound
+KUB,Kidney ureter bladder X-ray
+# Other Common
+DM,Diabetes mellitus
+T2DM,Type 2 diabetes mellitus
+T1DM,Type 1 diabetes mellitus
+BMI,Body mass index
+Temp,Body temperature
+w/,With
+w/o,Without
++ve,Positive
+-ve,Negative

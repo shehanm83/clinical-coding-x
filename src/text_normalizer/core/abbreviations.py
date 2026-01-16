@@ -7,7 +7,7 @@ import io
 import logging
 from pathlib import Path
 
-from mcp_text_normalizer.types.models import Abbreviation
+from text_normalizer.core.models import Abbreviation
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +19,14 @@ class AbbreviationWhitelist:
     functionality for expanding medical abbreviations in clinical text.
 
     The CSV file must have headers: Abbreviation,Full_Name
+    Lines starting with # are treated as comments and ignored.
+
+    Example CSV:
+        Abbreviation,Full_Name
+        # Patient and History
+        Pt,Patient
+        SOB,Shortness of breath
+        HTN,Hypertension
 
     Attributes:
         csv_path: Path to the CSV file containing abbreviations.
@@ -130,3 +138,7 @@ class AbbreviationWhitelist:
     def __contains__(self, abbrev: str) -> bool:
         """Support 'in' operator."""
         return self.contains(abbrev)
+
+    def __iter__(self):
+        """Iterate over all abbreviations."""
+        return iter(self._abbreviations.values())
