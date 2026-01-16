@@ -1,66 +1,58 @@
 """gRPC servicer implementation - wraps the core TextNormalizer."""
 
 import logging
+from pathlib import Path
 
-from shared.config import get_settings
-from text_normalizer.core.models import NormalizationMode
+from text_normalizer.core.abbreviations import AbbreviationWhitelist
 from text_normalizer.core.normalizer import TextNormalizer
 from text_normalizer.server.proto import text_normalizer_pb2, text_normalizer_pb2_grpc
 
 logger = logging.getLogger(__name__)
 
+# Default config path (relative to project root)
+DEFAULT_ABBREVIATIONS_PATH = Path(__file__).parent.parent.parent.parent / "config" / "abbreviations.csv"
+
 
 class TextNormalizerServicer(text_normalizer_pb2_grpc.TextNormalizerServiceServicer):
-    """gRPC servicer that wraps the core TextNormalizer component.
-
-    Supports both basic and LLM-powered normalization modes.
-    The mode can be specified per-request or defaults to server configuration.
-    """
+    """gRPC servicer that wraps the core TextNormalizer component."""
 
     def __init__(
         self,
         normalizer: TextNormalizer | None = None,
+        abbreviations_path: str | Path | None = None,
     ):
         """Initialize the servicer with a TextNormalizer instance.
 
         Args:
             normalizer: Optional TextNormalizer instance. Creates new one if not provided.
+            abbreviations_path: Path to abbreviations CSV file.
         """
-        self._settings = get_settings()
+        if normalizer:
+            self._normalizer = normalizer
+        else:
+            # Create normalizer with default whitelist
+            csv_path = abbreviations_path or DEFAULT_ABBREVIATIONS_PATH
+            whitelist = AbbreviationWhitelist(csv_path)
+            self._normalizer = TextNormalizer(whitelist)
 
-        # Create normalizers for both modes
-        self._basic_normalizer = TextNormalizer()
-        self._llm_normalizer = normalizer        
-
-        logger.info(
-            f"TextNormalizerServicer initialized. "
-            f"LLM provider: {self._settings.llm.provider}, "
-            f"LLM model: {self._settings.llm.model}"
-        )
-
-    def _get_normalizer(self) -> tuple[TextNormalizer]:
-        """Get the appropriate normalizer based on request mode.
-
-        Returns:
-            Tuple of (normalizer)
-        """
-        if self._llm_normalizer is None:
-            self._llm_normalizer = TextNormalizer()
-            return self._llm_normalizer
-
+        logger.info("TextNormalizerServicer initialized")
 
     def Normalize(self, request, context):
-        """Handle normalize request (synchronous)."""
-        normalizer = self._get_normalizer(request.mode)
+        """Handle normalize request."""
+        result = self._normalizer.normalize(request.text)
 
-        result = normalizer.normalize(request.text)
-
+        # Convert abbreviation expansions to repeated string format
+        # Format: "original -> expanded"
+        transformations = [
+            f"{exp.original} -> {exp.expanded}"
+            for exp in result.abbreviations_expanded
+        ]
 
         return text_normalizer_pb2.NormalizeResponse(
             original_text=result.original_text,
             normalized_text=result.normalized_text,
-            transformations_applied=result.transformations_applied,
-            model_used=result.model_used or "",
+            transformations_applied=transformations,
+            model_used="",  # No LLM yet
         )
 
     def HealthCheck(self, request, context):
@@ -68,6 +60,6 @@ class TextNormalizerServicer(text_normalizer_pb2_grpc.TextNormalizerServiceServi
         return text_normalizer_pb2.HealthCheckResponse(
             healthy=True,
             service_name="text_normalizer",
-            llm_provider=self._settings.llm.provider,
-            llm_model=self._settings.llm.model,
+            llm_provider="none",  # No LLM configured yet
+            llm_model="none",
         )

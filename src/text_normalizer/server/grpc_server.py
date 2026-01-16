@@ -2,10 +2,10 @@
 
 import logging
 from concurrent import futures
+from pathlib import Path
 
 import grpc
 
-from text_normalizer.core.normalizer import TextNormalizer
 from text_normalizer.server.proto import text_normalizer_pb2_grpc
 from text_normalizer.server.servicer import TextNormalizerServicer
 
@@ -20,21 +20,20 @@ class TextNormalizerServer:
         host: str = "0.0.0.0",
         port: int = 50051,
         max_workers: int = 10,
-        normalizer: TextNormalizer | None = None,
+        abbreviations_path: str | Path | None = None,
     ):
-        """
-        Initialize the gRPC server.
+        """Initialize the gRPC server.
 
         Args:
             host: Host to bind to.
             port: Port to listen on.
             max_workers: Maximum number of worker threads.
-            normalizer: Optional TextNormalizer instance to use.
+            abbreviations_path: Path to abbreviations CSV file.
         """
         self._host = host
         self._port = port
         self._max_workers = max_workers
-        self._normalizer = normalizer or TextNormalizer()
+        self._abbreviations_path = abbreviations_path
         self._server: grpc.Server | None = None
 
     @property
@@ -46,7 +45,8 @@ class TextNormalizerServer:
         """Start the gRPC server."""
         self._server = grpc.server(futures.ThreadPoolExecutor(max_workers=self._max_workers))
 
-        servicer = TextNormalizerServicer(self._normalizer)
+        # Create servicer (it handles TextNormalizer initialization internally)
+        servicer = TextNormalizerServicer(abbreviations_path=self._abbreviations_path)
         text_normalizer_pb2_grpc.add_TextNormalizerServiceServicer_to_server(
             servicer, self._server
         )

@@ -1,0 +1,121 @@
+You are a clinical text analyzer. Your task is to analyze the following clinical text and extract structured information.
+
+## Clinical Text to Analyze:
+{{ clinical_text }}
+
+## Instructions:
+
+Analyze the text and extract the following components:
+
+### 1. Spelling Corrections
+Identify and correct common medical/clinical spelling errors. Only correct obvious misspellings, not abbreviations.
+Examples of corrections:
+- "seveer" → "severe"
+- "chext" → "chest"
+- "radating" → "radiating"
+- "dificulty" → "difficulty"
+- "diabetis" → "diabetes"
+- "hypertenshun" → "hypertension"
+
+### 2. Negations
+Identify phrases that indicate negation, such as:
+- "no [condition]"
+- "denies [symptom]"
+- "negative for [finding]"
+- "without [symptom]"
+- "absence of [condition]"
+- "ruled out [condition]"
+
+### 3. Clinical Phrases
+Identify clinical phrases and categorize them as:
+- "finding": Observable clinical findings (e.g., "chest pain", "fever", "swelling")
+- "symptom": Patient-reported symptoms (e.g., "feeling dizzy", "nausea")
+- "condition": Medical conditions (e.g., "diabetes", "hypertension")
+- "procedure": Medical procedures (e.g., "blood test", "CT scan")
+- "medication": Medications mentioned (e.g., "aspirin", "metformin")
+- "body_site": Anatomical locations (e.g., "left arm", "chest wall")
+
+### 4. Modifiers
+Extract clinical modifiers attached to phrases:
+- "severity": mild, moderate, severe, intense, slight
+- "onset": acute, sudden, gradual, chronic, recent
+- "course": worsening, improving, stable, progressive, intermittent
+- "laterality": left, right, bilateral, unilateral
+- "episodicity": first episode, recurrent, occasional
+- "temporality": current, past, ongoing, resolved
+- "character": sharp, dull, burning, stabbing, aching, throbbing, crushing
+- "location": upper, lower, anterior, posterior, central, peripheral
+
+### 5. Relationships
+Identify relationships between clinical phrases:
+- "radiates_to": Pain or sensation spreading to another location (e.g., "chest pain radiating to left arm")
+- "associated_with": Symptoms occurring together (e.g., "headache associated with nausea")
+- "accompanied_by": Co-occurring symptoms (e.g., "fever accompanied by chills")
+- "caused_by": Causal relationship (e.g., "cough caused by smoking")
+- "aggravated_by": Factors that worsen symptoms (e.g., "pain aggravated by movement")
+- "relieved_by": Factors that improve symptoms (e.g., "pain relieved by rest")
+- "preceded_by": Temporal sequence (e.g., "vomiting preceded by nausea")
+- "followed_by": Temporal sequence (e.g., "chest pain followed by shortness of breath")
+
+## Output Format
+
+Return a JSON object with the following structure:
+```json
+{
+  "spelling_corrections": [
+    {
+      "original": "seveer",
+      "corrected": "severe",
+      "start": 12,
+      "end": 18
+    }
+  ],
+  "negations": [
+    {
+      "text": "no fever",
+      "start": 0,
+      "end": 8,
+      "negated": true
+    }
+  ],
+  "clinical_phrases": [
+    {
+      "text": "chest pain",
+      "type": "finding",
+      "start": 20,
+      "end": 30
+    }
+  ],
+  "modifiers": [
+    {
+      "modifier_type": "severity",
+      "value": "severe",
+      "target_phrase": "chest pain"
+    },
+    {
+      "modifier_type": "character",
+      "value": "crushing",
+      "target_phrase": "chest pain"
+    }
+  ],
+  "relationships": [
+    {
+      "relationship_type": "radiates_to",
+      "source_phrase": "chest pain",
+      "target_phrase": "left arm",
+      "relationship_text": "radiating to"
+    }
+  ]
+}
+```
+
+## Rules:
+- Start and end positions are character indices in the input text
+- Only include actual clinical content, not filler words
+- Be precise with character positions
+- If a category has no items, return an empty array
+- For modifiers, link them to the clinical phrase they modify
+- For relationships, identify the source and target phrases
+- Do NOT expand abbreviations - they are handled separately
+
+Output JSON only, no additional text:
