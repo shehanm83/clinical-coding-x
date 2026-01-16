@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package text_normalizer;
+
+service TextNormalizerService {
+    rpc Normalize (NormalizeRequest) returns (NormalizeResponse);
+    rpc HealthCheck (HealthCheckRequest) returns (HealthCheckResponse);
+}
+
+// Normalization mode
+enum NormalizationMode {
+    BASIC = 0;  // Simple rule-based normalization
+    LLM = 1;    // LLM-powered normalization
+}
+
+message NormalizeRequest {
+    string text = 1;
+    NormalizationMode mode = 2;  // Optional: defaults to server config
+}
+
+message NormalizeResponse {
+    string original_text = 1;
+    string normalized_text = 2;
+    repeated string transformations_applied = 3;
+    NormalizationMode mode = 4;        // Mode that was actually used
+    string model_used = 5;             // LLM model identifier (if LLM mode)
+}
+
+message HealthCheckRequest {}
+
+message HealthCheckResponse {
+    bool healthy = 1;
+    string service_name = 2;
+    string llm_provider = 3;    // Current LLM provider configured
+    string llm_model = 4;       // Current LLM model configured
+}
