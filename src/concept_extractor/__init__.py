@@ -1,1 +1,5 @@
-"""Concept Extractor module - Extracts clinical concepts from text."""
+"""Clinical concept extraction module."""
+
+from concept_extractor.extractor import ConceptExtractor
+
+__all__ = ["ConceptExtractor"]

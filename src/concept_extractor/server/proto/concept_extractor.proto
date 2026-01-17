@@ -1,0 +1,163 @@
+syntax = "proto3";
+
+package concept_extractor;
+
+service ConceptExtractorService {
+    // Match clinical text to SNOMED CT concepts
+    rpc MatchConcepts (MatchConceptsRequest) returns (MatchConceptsResponse);
+
+    // Get direct children of a concept
+    rpc GetChildren (GetChildrenRequest) returns (HierarchyResponse);
+
+    // Get descendants of a concept
+    rpc GetDescendants (GetDescendantsRequest) returns (HierarchyResponse);
+
+    // Get ancestors of a concept
+    rpc GetAncestors (GetAncestorsRequest) returns (AncestorsResponse);
+
+    // Get relationships for a concept
+    rpc GetRelationships (GetRelationshipsRequest) returns (RelationshipsResponse);
+
+    // Get valid MRCM attributes for a concept
+    rpc GetValidAttributes (GetValidAttributesRequest) returns (AttributesResponse);
+
+    // Get valid range values for an attribute
+    rpc GetAttributeRange (GetAttributeRangeRequest) returns (AttributeRangeResponse);
+
+    // Health check
+    rpc HealthCheck (HealthCheckRequest) returns (HealthCheckResponse);
+}
+
+// ============ Concept Matching ============
+
+message MatchConceptsRequest {
+    string text = 1;                    // Clinical text to match
+    int32 limit = 2;                    // Max results (default: 10)
+    string domain = 3;                  // Optional domain filter (e.g., 'finding')
+    float min_similarity = 4;           // Minimum similarity (0-1)
+    bool disable_synonym_expansion = 5; // Set true to skip lay term expansion
+}
+
+message ConceptMatch {
+    string concept_id = 1;
+    string term = 2;
+    float similarity = 3;
+    string fsn = 4;
+    string semantic_tag = 5;
+    float semantic_score = 6;
+    float lexical_score = 7;
+    string lexical_match = 8;           // 'exact', 'partial', 'none'
+    string match_type = 9;              // 'vector', 'exact', 'fuzzy'
+    string state = 10;                  // 'primary', 'secondary'
+}
+
+message MatchConceptsResponse {
+    string query = 1;
+    repeated ConceptMatch matches = 2;
+    int32 processing_time_ms = 3;
+}
+
+// ============ Hierarchy ============
+
+message SnomedConcept {
+    string concept_id = 1;
+    string term = 2;
+    string fsn = 3;
+    string semantic_tag = 4;
+    bool active = 5;
+}
+
+message GetChildrenRequest {
+    string concept_id = 1;
+}
+
+message GetDescendantsRequest {
+    string concept_id = 1;
+    int32 depth = 2;                    // Max depth (default: 1)
+}
+
+message HierarchyResponse {
+    string concept_id = 1;
+    repeated SnomedConcept concepts = 2;
+    int32 total_count = 3;
+    int32 processing_time_ms = 4;
+}
+
+message GetAncestorsRequest {
+    string concept_id = 1;
+}
+
+message AncestorsResponse {
+    string concept_id = 1;
+    repeated string ancestor_ids = 2;
+}
+
+// ============ Relationships ============
+
+message Relationship {
+    string source_id = 1;
+    string type_id = 2;
+    string destination_id = 3;
+    string type_name = 4;
+    string destination_term = 5;
+    int32 group = 6;
+}
+
+message GetRelationshipsRequest {
+    string concept_id = 1;
+    bool exclude_is_a = 2;              // Exclude IS_A relationships
+}
+
+message RelationshipsResponse {
+    string concept_id = 1;
+    repeated Relationship relationships = 2;
+    int32 processing_time_ms = 3;
+}
+
+// ============ MRCM Attributes ============
+
+message AttributeDefinition {
+    string id = 1;
+    string name = 2;
+    bool is_qualifier = 3;
+    int32 value_count = 4;
+}
+
+message AttributeValue {
+    string id = 1;
+    string term = 2;
+    string fsn = 3;
+    string semantic_tag = 4;
+}
+
+message GetValidAttributesRequest {
+    string concept_id = 1;
+    string semantic_tag = 2;            // Optional: from FSN
+    string concept_term = 3;            // Optional: preferred term
+}
+
+message AttributesResponse {
+    repeated AttributeDefinition attributes = 1;
+}
+
+message GetAttributeRangeRequest {
+    string attribute_id = 1;
+}
+
+message AttributeRangeResponse {
+    string attribute_id = 1;
+    string attribute_name = 2;
+    repeated AttributeValue values = 3;
+}
+
+// ============ Health Check ============
+
+message HealthCheckRequest {}
+
+message HealthCheckResponse {
+    bool healthy = 1;
+    string service_name = 2;
+    string snomed_api_url = 3;
+    int32 synonym_count = 4;
+    int32 mrcm_attribute_count = 5;
+}

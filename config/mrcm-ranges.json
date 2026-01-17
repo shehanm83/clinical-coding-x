@@ -1,0 +1,154 @@
+{
+  "metadata": {
+    "extracted_from": "data/mrcm/ranges",
+    "extraction_date": "2026-01-04",
+    "total_attributes": 5,
+    "generator": "scripts/extract_mrcm_ranges.py",
+    "note": "Initial placeholder - run extract_mrcm_ranges.py to populate with actual SNOMED terms"
+  },
+  "attributes": {
+    "246112005": {
+      "name": "Severity",
+      "ecl": "<< 272141005 |Severities (qualifier value)|",
+      "is_qualifier": true,
+      "values": [
+        {
+          "id": "255604002",
+          "term": "Mild",
+          "fsn": "Mild (qualifier value)",
+          "semantic_tag": "qualifier value"
+        },
+        {
+          "id": "6736007",
+          "term": "Moderate",
+          "fsn": "Moderate (severity modifier)",
+          "semantic_tag": "severity modifier"
+        },
+        {
+          "id": "24484000",
+          "term": "Severe",
+          "fsn": "Severe (severity modifier)",
+          "semantic_tag": "severity modifier"
+        }
+      ]
+    },
+    "272741003": {
+      "name": "Laterality",
+      "ecl": "<< 182353008 |Side|",
+      "is_qualifier": true,
+      "values": [
+        {
+          "id": "7771000",
+          "term": "Left",
+          "fsn": "Left (qualifier value)",
+          "semantic_tag": "qualifier value"
+        },
+        {
+          "id": "24028007",
+          "term": "Right",
+          "fsn": "Right (qualifier value)",
+          "semantic_tag": "qualifier value"
+        },
+        {
+          "id": "51440002",
+          "term": "Bilateral",
+          "fsn": "Bilateral (qualifier value)",
+          "semantic_tag": "qualifier value"
+        }
+      ]
+    },
+    "263502005": {
+      "name": "Clinical course",
+      "ecl": "<< 288524001 |Courses|",
+      "is_qualifier": true,
+      "values": [
+        {
+          "id": "373933003",
+          "term": "Acute",
+          "fsn": "Acute (qualifier value)",
+          "semantic_tag": "qualifier value"
+        },
+        {
+          "id": "90734009",
+          "term": "Chronic",
+          "fsn": "Chronic (qualifier value)",
+          "semantic_tag": "qualifier value"
+        },
+        {
+          "id": "255212004",
+          "term": "Acute-on-chronic",
+          "fsn": "Acute-on-chronic (qualifier value)",
+          "semantic_tag": "qualifier value"
+        },
+        {
+          "id": "7087005",
+          "term": "Intermittent",
+          "fsn": "Intermittent (qualifier value)",
+          "semantic_tag": "qualifier value"
+        }
+      ]
+    },
+    "246454002": {
+      "name": "Occurrence",
+      "ecl": "<< 282032007 |Periods of life|",
+      "is_qualifier": true,
+      "values": [
+        {
+          "id": "255217005",
+          "term": "First episode",
+          "fsn": "First episode (qualifier value)",
+          "semantic_tag": "qualifier value"
+        },
+        {
+          "id": "255227004",
+          "term": "Recurrent",
+          "fsn": "Recurrent (qualifier value)",
+          "semantic_tag": "qualifier value"
+        },
+        {
+          "id": "263732008",
+          "term": "New episode",
+          "fsn": "New episode (qualifier value)",
+          "semantic_tag": "qualifier value"
+        }
+      ]
+    },
+    "370135005": {
+      "name": "Pathological process",
+      "ecl": "<< 441862004 |Infectious process|",
+      "is_qualifier": false,
+      "values": [
+        {
+          "id": "441862004",
+          "term": "Infectious process",
+          "fsn": "Infectious process (qualifier value)",
+          "semantic_tag": "qualifier value"
+        },
+        {
+          "id": "263680009",
+          "term": "Autoimmune process",
+          "fsn": "Autoimmune process (qualifier value)",
+          "semantic_tag": "qualifier value"
+        },
+        {
+          "id": "308490002",
+          "term": "Pathological developmental process",
+          "fsn": "Pathological developmental process (qualifier value)",
+          "semantic_tag": "qualifier value"
+        },
+        {
+          "id": "472963003",
+          "term": "Hypersensitivity process",
+          "fsn": "Hypersensitivity process (qualifier value)",
+          "semantic_tag": "qualifier value"
+        },
+        {
+          "id": "769247005",
+          "term": "Inflammatory process",
+          "fsn": "Inflammatory process (qualifier value)",
+          "semantic_tag": "qualifier value"
+        }
+      ]
+    }
+  }
+}

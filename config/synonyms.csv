@@ -1,0 +1,61 @@
+Lay_Term,SNOMED_Preferred
+# Respiratory - lay terms that embeddings fail on
+shortness of breath,Dyspnea
+short of breath,Dyspnea
+difficulty breathing,Dyspnea
+trouble breathing,Dyspnea
+cant breathe,Dyspnea
+hard to breathe,Dyspnea
+out of breath,Dyspnea
+SOB,Dyspnea
+# Cardiovascular
+heart attack,Myocardial infarction
+MI,Myocardial infarction
+high blood pressure,Hypertension
+HTN,Hypertension
+CP,Chest pain
+chest tightness,Tight chest
+tight chest,Tight chest
+AF,Atrial fibrillation
+Afib,Atrial fibrillation
+DVT,Deep vein thrombosis
+PE,Pulmonary embolism
+CHF,Congestive heart failure
+# Gastrointestinal - true slang that embeddings fail on
+the runs,Diarrhea
+N/V,Nausea and vomiting
+GERD,Gastroesophageal reflux disease
+UGIB,Upper gastrointestinal bleeding
+LGIB,Lower gastrointestinal bleeding
+# Neurological
+HA,Headache
+CVA,Cerebrovascular accident
+TIA,Transient ischemic attack
+LOC,Loss of consciousness
+# Pulmonary - slang that embeddings fail on
+water on the lung,Pleural effusion
+fluid on the lung,Pleural effusion
+COPD,Chronic obstructive pulmonary disease
+ARDS,Acute respiratory distress syndrome
+# Mental Health
+SI,Suicidal ideation
+HI,Homicidal ideation
+# Musculoskeletal
+LBP,Low back pain
+# Renal
+AKI,Acute kidney injury
+CKD,Chronic kidney disease
+ESRD,End stage renal disease
+UTI,Urinary tract infection
+# Metabolic
+DM,Diabetes mellitus
+T2DM,Type 2 diabetes mellitus
+T1DM,Type 1 diabetes mellitus
+# Location abbreviations
+RLQ,Right lower quadrant
+LLQ,Left lower quadrant
+RUQ,Right upper quadrant
+LUQ,Left upper quadrant
+# Status
+S/P,Status post
+s/p,Status post
