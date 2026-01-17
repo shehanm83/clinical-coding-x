@@ -20,8 +20,7 @@ DEFAULT_PROMPTS_DIR = PROJECT_ROOT / "prompts"
 
 
 class TextNormalizerServicer(text_normalizer_pb2_grpc.TextNormalizerServiceServicer):
-    """gRPC servicer that wraps the core TextNormalizer component.
-    """
+    """gRPC servicer that wraps the core TextNormalizer component."""
 
     def __init__(
         self,
@@ -70,47 +69,81 @@ class TextNormalizerServicer(text_normalizer_pb2_grpc.TextNormalizerServiceServi
         logger.info("TextNormalizerServicer initialized")
 
     def Normalize(self, request, context):
-        """Handle normalize request.
-        """        
+        """Handle normalize request."""
         result = asyncio.run(self._normalizer.normalize(request.text))
-        model_used = self._settings.llm.model
 
-        # Build transformations list
-        transformations = []
-
-        # Add abbreviation expansions
-        for exp in result.abbreviations_expanded:
-            transformations.append(f"[ABBREV] {exp.original} -> {exp.expanded}")
-
-        # Add spelling corrections
-        for corr in result.spelling_corrections:
-            transformations.append(f"[SPELL] {corr.original} -> {corr.corrected}")
-
-        # Add negations
-        for neg in result.negations:
-            transformations.append(f"[NEGATION] {neg.text}")
-
-        # Add clinical phrases
-        for phrase in result.clinical_phrases:
-            transformations.append(f"[{phrase.phrase_type.upper()}] {phrase.text}")
-
-        # Add modifiers
-        for mod in result.modifiers:
-            transformations.append(
-                f"[MODIFIER:{mod.modifier_type}] {mod.value} -> {mod.target_phrase}"
+        # Build structured response
+        abbreviations = [
+            text_normalizer_pb2.AbbreviationExpansion(
+                original=exp.original,
+                expanded=exp.expanded,
+                start=exp.start,
+                end=exp.end,
             )
+            for exp in result.abbreviations_expanded
+        ]
 
-        # Add relationships
-        for rel in result.relationships:
-            transformations.append(
-                f"[RELATION:{rel.relationship_type}] {rel.source_phrase} -> {rel.target_phrase}"
+        spelling_corrections = [
+            text_normalizer_pb2.SpellingCorrection(
+                original=corr.original,
+                corrected=corr.corrected,
+                start=corr.start,
+                end=corr.end,
             )
+            for corr in result.spelling_corrections
+        ]
+
+        negations = [
+            text_normalizer_pb2.Negation(
+                text=neg.text,
+                start=neg.start,
+                end=neg.end,
+                negated=neg.negated,
+            )
+            for neg in result.negations
+        ]
+
+        clinical_phrases = [
+            text_normalizer_pb2.ClinicalPhrase(
+                text=phrase.text,
+                phrase_type=phrase.phrase_type,
+                start=phrase.start,
+                end=phrase.end,
+            )
+            for phrase in result.clinical_phrases
+        ]
+
+        modifiers = [
+            text_normalizer_pb2.Modifier(
+                modifier_type=mod.modifier_type,
+                value=mod.value,
+                target_phrase=mod.target_phrase,
+            )
+            for mod in result.modifiers
+        ]
+
+        relationships = [
+            text_normalizer_pb2.Relationship(
+                relationship_type=rel.relationship_type,
+                source_phrase=rel.source_phrase,
+                target_phrase=rel.target_phrase,
+                relationship_text=rel.relationship_text,
+            )
+            for rel in result.relationships
+        ]
 
         return text_normalizer_pb2.NormalizeResponse(
             original_text=result.original_text,
             normalized_text=result.normalized_text,
-            transformations_applied=transformations,
-            model_used=model_used,
+            abbreviations_expanded=abbreviations,
+            spelling_corrections=spelling_corrections,
+            negations=negations,
+            clinical_phrases=clinical_phrases,
+            modifiers=modifiers,
+            relationships=relationships,
+            processing_time_ms=result.processing_time_ms,
+            tokens_used=result.tokens_used,
+            model_used=self._settings.llm.model,
         )
 
     def HealthCheck(self, request, context):

@@ -19,42 +19,74 @@ def main():
     print(f"  LLM Provider: {health_response.llm_provider}")
     print(f"  LLM Model: {health_response.llm_model}")
 
-    # Test normalize - BASIC mode
+    # Test normalize - clinical text
     print("\n" + "=" * 60)
-    print("Testing Normalize (BASIC mode)...")
+    print("Testing Normalize...")
     print("=" * 60)
-    test_text = "  Hello   WORLD  this is   a TEST  "
-    normalize_response = stub.Normalize(
-        text_normalizer_pb2.NormalizeRequest(
-            text=test_text,
-            mode=text_normalizer_pb2.NormalizationMode.BASIC,
-        )
-    )
-    print(f"  Original: '{normalize_response.original_text}'")
-    print(f"  Normalized: '{normalize_response.normalized_text}'")
-    print(f"  Transformations: {list(normalize_response.transformations_applied)}")
-    print(f"  Mode: {'LLM' if normalize_response.mode == 1 else 'BASIC'}")
-    print(f"  Model Used: {normalize_response.model_used or 'N/A'}")
-
-    # Test normalize - LLM mode (clinical text)
-    print("\n" + "=" * 60)
-    print("Testing Normalize (LLM mode)...")
-    print("=" * 60)
-    clinical_text = "pt c/o ha x 3d, hx of htn, no n/v"
+    clinical_text = "patient with diabatic have a pain in left leg"
     try:
-        normalize_response = stub.Normalize(
-            text_normalizer_pb2.NormalizeRequest(
-                text=clinical_text,
-                mode=text_normalizer_pb2.NormalizationMode.LLM,
-            )
+        response = stub.Normalize(
+            text_normalizer_pb2.NormalizeRequest(text=clinical_text)
         )
-        print(f"  Original: '{normalize_response.original_text}'")
-        print(f"  Normalized: '{normalize_response.normalized_text}'")
-        print(f"  Transformations: {list(normalize_response.transformations_applied)}")
-        print(f"  Mode: {'LLM' if normalize_response.mode == 1 else 'BASIC'}")
-        print(f"  Model Used: {normalize_response.model_used or 'N/A'}")
+        print(f"  Original: '{response.original_text}'")
+        print(f"  Normalized: '{response.normalized_text}'")
+        print(f"  Model Used: {response.model_used}")
+        print(f"  Processing Time: {response.processing_time_ms}ms")
+        print(f"  Tokens Used: {response.tokens_used}")
+
+        print("\n  Abbreviations Expanded:")
+        for abbrev in response.abbreviations_expanded:
+            print(f"    - {abbrev.original} -> {abbrev.expanded}")
+
+        print("\n  Spelling Corrections:")
+        for corr in response.spelling_corrections:
+            print(f"    - {corr.original} -> {corr.corrected}")
+
+        print("\n  Clinical Phrases:")
+        for phrase in response.clinical_phrases:
+            print(f"    - [{phrase.phrase_type}] {phrase.text}")
+
+        print("\n  Modifiers:")
+        for mod in response.modifiers:
+            print(f"    - [{mod.modifier_type}] {mod.value} -> {mod.target_phrase}")
+
+        print("\n  Relationships:")
+        for rel in response.relationships:
+            print(f"    - [{rel.relationship_type}] {rel.source_phrase} -> {rel.target_phrase}")
+
+        print("\n  Negations:")
+        for neg in response.negations:
+            print(f"    - {neg.text} (negated={neg.negated})")
+
     except grpc.RpcError as e:
-        print(f"  LLM mode failed (expected if no LLM configured): {e.details()}")
+        print(f"  Error: {e.details()}")
+
+    # Test with more complex clinical text
+    print("\n" + "=" * 60)
+    print("Testing with complex clinical text...")
+    print("=" * 60)
+    clinical_text2 = "Patient has severe CP radiating to left arm, accompanied by SOB"
+    try:
+        response = stub.Normalize(
+            text_normalizer_pb2.NormalizeRequest(text=clinical_text2)
+        )
+        print(f"  Original: '{response.original_text}'")
+        print(f"  Normalized: '{response.normalized_text}'")
+
+        print("\n  Clinical Phrases:")
+        for phrase in response.clinical_phrases:
+            print(f"    - [{phrase.phrase_type}] {phrase.text}")
+
+        print("\n  Modifiers:")
+        for mod in response.modifiers:
+            print(f"    - [{mod.modifier_type}] {mod.value} -> {mod.target_phrase}")
+
+        print("\n  Relationships:")
+        for rel in response.relationships:
+            print(f"    - [{rel.relationship_type}] {rel.source_phrase} -> {rel.target_phrase}")
+
+    except grpc.RpcError as e:
+        print(f"  Error: {e.details()}")
 
     print("\n" + "=" * 60)
     print("All tests completed!")

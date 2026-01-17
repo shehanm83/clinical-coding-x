@@ -24,23 +24,33 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x15text_normalizer.proto\x12\x0ftext_normalizer\"R\n\x10NormalizeRequest\x12\x0c\n\x04text\x18\x01 \x01(\t\x12\x30\n\x04mode\x18\x02 \x01(\x0e\x32\".text_normalizer.NormalizationMode\"\xaa\x01\n\x11NormalizeResponse\x12\x15\n\roriginal_text\x18\x01 \x01(\t\x12\x17\n\x0fnormalized_text\x18\x02 \x01(\t\x12\x1f\n\x17transformations_applied\x18\x03 \x03(\t\x12\x30\n\x04mode\x18\x04 \x01(\x0e\x32\".text_normalizer.NormalizationMode\x12\x12\n\nmodel_used\x18\x05 \x01(\t\"\x14\n\x12HealthCheckRequest\"e\n\x13HealthCheckResponse\x12\x0f\n\x07healthy\x18\x01 \x01(\x08\x12\x14\n\x0cservice_name\x18\x02 \x01(\t\x12\x14\n\x0cllm_provider\x18\x03 \x01(\t\x12\x11\n\tllm_model\x18\x04 \x01(\t*\'\n\x11NormalizationMode\x12\t\n\x05\x42\x41SIC\x10\x00\x12\x07\n\x03LLM\x10\x01\x32\xc5\x01\n\x15TextNormalizerService\x12R\n\tNormalize\x12!.text_normalizer.NormalizeRequest\x1a\".text_normalizer.NormalizeResponse\x12X\n\x0bHealthCheck\x12#.text_normalizer.HealthCheckRequest\x1a$.text_normalizer.HealthCheckResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x15text_normalizer.proto\x12\x0ftext_normalizer\" \n\x10NormalizeRequest\x12\x0c\n\x04text\x18\x01 \x01(\t\"O\n\x0e\x43linicalPhrase\x12\x0c\n\x04text\x18\x01 \x01(\t\x12\x13\n\x0bphrase_type\x18\x02 \x01(\t\x12\r\n\x05start\x18\x03 \x01(\x05\x12\x0b\n\x03\x65nd\x18\x04 \x01(\x05\"G\n\x08Modifier\x12\x15\n\rmodifier_type\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t\x12\x15\n\rtarget_phrase\x18\x03 \x01(\t\"r\n\x0cRelationship\x12\x19\n\x11relationship_type\x18\x01 \x01(\t\x12\x15\n\rsource_phrase\x18\x02 \x01(\t\x12\x15\n\rtarget_phrase\x18\x03 \x01(\t\x12\x19\n\x11relationship_text\x18\x04 \x01(\t\"U\n\x12SpellingCorrection\x12\x10\n\x08original\x18\x01 \x01(\t\x12\x11\n\tcorrected\x18\x02 \x01(\t\x12\r\n\x05start\x18\x03 \x01(\x05\x12\x0b\n\x03\x65nd\x18\x04 \x01(\x05\"E\n\x08Negation\x12\x0c\n\x04text\x18\x01 \x01(\t\x12\r\n\x05start\x18\x02 \x01(\x05\x12\x0b\n\x03\x65nd\x18\x03 \x01(\x05\x12\x0f\n\x07negated\x18\x04 \x01(\x08\"W\n\x15\x41\x62\x62reviationExpansion\x12\x10\n\x08original\x18\x01 \x01(\t\x12\x10\n\x08\x65xpanded\x18\x02 \x01(\t\x12\r\n\x05start\x18\x03 \x01(\x05\x12\x0b\n\x03\x65nd\x18\x04 \x01(\x05\"\xe0\x03\n\x11NormalizeResponse\x12\x15\n\roriginal_text\x18\x01 \x01(\t\x12\x17\n\x0fnormalized_text\x18\x02 \x01(\t\x12\x46\n\x16\x61\x62\x62reviations_expanded\x18\x03 \x03(\x0b\x32&.text_normalizer.AbbreviationExpansion\x12\x41\n\x14spelling_corrections\x18\x04 \x03(\x0b\x32#.text_normalizer.SpellingCorrection\x12,\n\tnegations\x18\x05 \x03(\x0b\x32\x19.text_normalizer.Negation\x12\x39\n\x10\x63linical_phrases\x18\x06 \x03(\x0b\x32\x1f.text_normalizer.ClinicalPhrase\x12,\n\tmodifiers\x18\x07 \x03(\x0b\x32\x19.text_normalizer.Modifier\x12\x34\n\rrelationships\x18\x08 \x03(\x0b\x32\x1d.text_normalizer.Relationship\x12\x1a\n\x12processing_time_ms\x18\t \x01(\x05\x12\x13\n\x0btokens_used\x18\n \x01(\x05\x12\x12\n\nmodel_used\x18\x0b \x01(\t\"\x14\n\x12HealthCheckRequest\"e\n\x13HealthCheckResponse\x12\x0f\n\x07healthy\x18\x01 \x01(\x08\x12\x14\n\x0cservice_name\x18\x02 \x01(\t\x12\x14\n\x0cllm_provider\x18\x03 \x01(\t\x12\x11\n\tllm_model\x18\x04 \x01(\t2\xc5\x01\n\x15TextNormalizerService\x12R\n\tNormalize\x12!.text_normalizer.NormalizeRequest\x1a\".text_normalizer.NormalizeResponse\x12X\n\x0bHealthCheck\x12#.text_normalizer.HealthCheckRequest\x1a$.text_normalizer.HealthCheckResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'text_normalizer_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
-  _globals['_NORMALIZATIONMODE']._serialized_start=424
-  _globals['_NORMALIZATIONMODE']._serialized_end=463
   _globals['_NORMALIZEREQUEST']._serialized_start=42
-  _globals['_NORMALIZEREQUEST']._serialized_end=124
-  _globals['_NORMALIZERESPONSE']._serialized_start=127
-  _globals['_NORMALIZERESPONSE']._serialized_end=297
-  _globals['_HEALTHCHECKREQUEST']._serialized_start=299
-  _globals['_HEALTHCHECKREQUEST']._serialized_end=319
-  _globals['_HEALTHCHECKRESPONSE']._serialized_start=321
-  _globals['_HEALTHCHECKRESPONSE']._serialized_end=422
-  _globals['_TEXTNORMALIZERSERVICE']._serialized_start=466
-  _globals['_TEXTNORMALIZERSERVICE']._serialized_end=663
+  _globals['_NORMALIZEREQUEST']._serialized_end=74
+  _globals['_CLINICALPHRASE']._serialized_start=76
+  _globals['_CLINICALPHRASE']._serialized_end=155
+  _globals['_MODIFIER']._serialized_start=157
+  _globals['_MODIFIER']._serialized_end=228
+  _globals['_RELATIONSHIP']._serialized_start=230
+  _globals['_RELATIONSHIP']._serialized_end=344
+  _globals['_SPELLINGCORRECTION']._serialized_start=346
+  _globals['_SPELLINGCORRECTION']._serialized_end=431
+  _globals['_NEGATION']._serialized_start=433
+  _globals['_NEGATION']._serialized_end=502
+  _globals['_ABBREVIATIONEXPANSION']._serialized_start=504
+  _globals['_ABBREVIATIONEXPANSION']._serialized_end=591
+  _globals['_NORMALIZERESPONSE']._serialized_start=594
+  _globals['_NORMALIZERESPONSE']._serialized_end=1074
+  _globals['_HEALTHCHECKREQUEST']._serialized_start=1076
+  _globals['_HEALTHCHECKREQUEST']._serialized_end=1096
+  _globals['_HEALTHCHECKRESPONSE']._serialized_start=1098
+  _globals['_HEALTHCHECKRESPONSE']._serialized_end=1199
+  _globals['_TEXTNORMALIZERSERVICE']._serialized_start=1202
+  _globals['_TEXTNORMALIZERSERVICE']._serialized_end=1399
 # @@protoc_insertion_point(module_scope)

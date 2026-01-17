@@ -3,7 +3,7 @@
 import grpc
 import warnings
 
-from text_normalizer.server.proto import text_normalizer_pb2 as text__normalizer__pb2
+from . import text_normalizer_pb2 as text__normalizer__pb2
 
 GRPC_GENERATED_VERSION = '1.76.0'
 GRPC_VERSION = grpc.__version__

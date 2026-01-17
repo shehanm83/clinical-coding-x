@@ -7,23 +7,73 @@ service TextNormalizerService {
     rpc HealthCheck (HealthCheckRequest) returns (HealthCheckResponse);
 }
 
-// Normalization mode
-enum NormalizationMode {
-    BASIC = 0;  // Simple rule-based normalization
-    LLM = 1;    // LLM-powered normalization
-}
-
 message NormalizeRequest {
     string text = 1;
-    NormalizationMode mode = 2;  // Optional: defaults to server config
+}
+
+// Clinical phrase extracted from text
+message ClinicalPhrase {
+    string text = 1;           // The clinical phrase text
+    string phrase_type = 2;    // Type: finding, symptom, condition, medication, body_site, procedure
+    int32 start = 3;           // Start position in text
+    int32 end = 4;             // End position in text
+}
+
+// Clinical modifier attached to a phrase
+message Modifier {
+    string modifier_type = 1;  // Type: severity, laterality, onset, course, character, etc.
+    string value = 2;          // The modifier value (e.g., "severe", "left")
+    string target_phrase = 3;  // The phrase this modifier applies to
+}
+
+// Relationship between clinical phrases
+message Relationship {
+    string relationship_type = 1;  // Type: radiates_to, associated_with, accompanied_by, etc.
+    string source_phrase = 2;      // The source phrase
+    string target_phrase = 3;      // The target phrase
+    string relationship_text = 4;  // The text indicating the relationship
+}
+
+// Spelling correction made to the text
+message SpellingCorrection {
+    string original = 1;       // Original misspelled word
+    string corrected = 2;      // Corrected spelling
+    int32 start = 3;           // Start position in original text
+    int32 end = 4;             // End position in original text
+}
+
+// Negation span in the text
+message Negation {
+    string text = 1;           // The negated phrase
+    int32 start = 2;           // Start position
+    int32 end = 3;             // End position
+    bool negated = 4;          // Whether this span is negated
+}
+
+// Abbreviation that was expanded
+message AbbreviationExpansion {
+    string original = 1;       // Original abbreviation in text
+    string expanded = 2;       // Expanded form
+    int32 start = 3;           // Start position in original text
+    int32 end = 4;             // End position in original text
 }
 
 message NormalizeResponse {
     string original_text = 1;
     string normalized_text = 2;
-    repeated string transformations_applied = 3;
-    NormalizationMode mode = 4;        // Mode that was actually used
-    string model_used = 5;             // LLM model identifier (if LLM mode)
+
+    // Structured extractions
+    repeated AbbreviationExpansion abbreviations_expanded = 3;
+    repeated SpellingCorrection spelling_corrections = 4;
+    repeated Negation negations = 5;
+    repeated ClinicalPhrase clinical_phrases = 6;
+    repeated Modifier modifiers = 7;
+    repeated Relationship relationships = 8;
+
+    // Metadata
+    int32 processing_time_ms = 9;
+    int32 tokens_used = 10;
+    string model_used = 11;    // LLM model identifier
 }
 
 message HealthCheckRequest {}
@@ -31,6 +81,6 @@ message HealthCheckRequest {}
 message HealthCheckResponse {
     bool healthy = 1;
     string service_name = 2;
-    string llm_provider = 3;    // Current LLM provider configured
-    string llm_model = 4;       // Current LLM model configured
+    string llm_provider = 3;   // Current LLM provider configured
+    string llm_model = 4;      // Current LLM model configured
 }
