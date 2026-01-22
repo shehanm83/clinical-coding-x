@@ -16,7 +16,7 @@ if _env_file.exists():
 
 @dataclass
 class SnomedApiConfig:
-    """SNOMED API configuration."""
+    """SNOMED HTTP API configuration (legacy)."""
 
     base_url: str = field(
         default_factory=lambda: environ.get("SNOMED_API_BASE_URL", "http://localhost:8010")
@@ -27,10 +27,23 @@ class SnomedApiConfig:
 
 
 @dataclass
+class SnomedGrpcConfig:
+    """SNOMED gRPC service configuration."""
+
+    grpc_address: str = field(
+        default_factory=lambda: environ.get("SNOMED_GRPC_ADDRESS", "localhost:50051")
+    )
+    timeout: float = field(
+        default_factory=lambda: float(environ.get("SNOMED_GRPC_TIMEOUT", "30.0"))
+    )
+
+
+@dataclass
 class ConceptExtractorSettings:
     """Concept extractor settings."""
 
     snomed_api: SnomedApiConfig = field(default_factory=SnomedApiConfig)
+    snomed_grpc: SnomedGrpcConfig = field(default_factory=SnomedGrpcConfig)
 
     # Paths (relative to project root)
     project_root: Path = field(default_factory=lambda: _project_root)

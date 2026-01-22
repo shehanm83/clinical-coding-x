@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
+from typing import Protocol, runtime_checkable
 
-from concept_extractor.core.config import SnomedApiConfig, get_settings
+from concept_extractor.core.config import SnomedApiConfig, SnomedGrpcConfig, get_settings
 from concept_extractor.core.models import (
     AttributeDefinition,
     AttributeValue,
@@ -13,12 +14,43 @@ from concept_extractor.core.models import (
     HierarchyResult,
     MatchResult,
     RelationshipResult,
+    SnomedConcept,
 )
 from concept_extractor.core.mrcm import MrcmConfigProvider
 from concept_extractor.core.snomed_client import SnomedClient
+from concept_extractor.core.snomed_grpc_client import SnomedGrpcClient
 from concept_extractor.core.synonyms import SynonymLookup
 
 logger = logging.getLogger(__name__)
+
+
+@runtime_checkable
+class SnomedClientProtocol(Protocol):
+    """Protocol for SNOMED client implementations."""
+
+    async def match_concepts(
+        self,
+        text: str,
+        limit: int = 10,
+        domain: str | None = None,
+        min_similarity: float = 0.0,
+    ) -> MatchResult: ...
+
+    async def get_children(self, concept_id: str) -> HierarchyResult: ...
+
+    async def get_descendants(
+        self, concept_id: str, depth: int = 1
+    ) -> HierarchyResult: ...
+
+    async def get_ancestors(self, concept_id: str) -> set[str]: ...
+
+    async def get_relationships(
+        self, concept_id: str, exclude_is_a: bool = False
+    ) -> RelationshipResult: ...
+
+    async def is_descendant_of(self, concept_id: str, ancestor_id: str) -> bool: ...
+
+    async def close(self) -> None: ...
 
 
 class ConceptExtractor:
@@ -26,33 +58,43 @@ class ConceptExtractor:
 
     This class orchestrates:
     - Synonym expansion (lay terms -> SNOMED preferred terms)
-    - Vector similarity search via snomed-service
+    - Text search and ECL queries via SNOMED gRPC service
     - Hierarchy traversal (children, descendants, ancestors)
     - Relationship queries
     - MRCM attribute validation
 
-    NO LLM is used - all operations are deterministic database queries
-    or vector similarity search.
+    NO LLM is used - all operations are deterministic database queries.
     """
 
     def __init__(
         self,
         snomed_config: SnomedApiConfig | None = None,
+        grpc_config: SnomedGrpcConfig | None = None,
         synonyms_path: Path | str | None = None,
         mrcm_path: Path | str | None = None,
+        use_grpc: bool = True,
     ) -> None:
         """Initialize the concept extractor.
 
         Args:
-            snomed_config: SNOMED API configuration. If None, loads from env.
+            snomed_config: SNOMED HTTP API configuration (legacy).
+            grpc_config: SNOMED gRPC configuration. If None, loads from env.
             synonyms_path: Path to synonyms CSV. If None, uses default.
             mrcm_path: Path to MRCM JSON config. If None, uses default.
+            use_grpc: If True (default), use gRPC client. If False, use HTTP client.
         """
         settings = get_settings()
 
-        # Initialize SNOMED client
-        self._snomed_config = snomed_config or settings.snomed_api
-        self._snomed_client = SnomedClient(self._snomed_config)
+        # Initialize SNOMED client (gRPC by default)
+        self._use_grpc = use_grpc
+        if use_grpc:
+            self._grpc_config = grpc_config or settings.snomed_grpc
+            self._snomed_client: SnomedClientProtocol = SnomedGrpcClient(self._grpc_config)
+            client_info = f"gRPC={self._grpc_config.grpc_address}"
+        else:
+            self._snomed_config = snomed_config or settings.snomed_api
+            self._snomed_client = SnomedClient(self._snomed_config)
+            client_info = f"HTTP={self._snomed_config.base_url}"
 
         # Initialize synonym lookup
         self._synonyms = SynonymLookup(synonyms_path or settings.synonyms_path)
@@ -62,8 +104,8 @@ class ConceptExtractor:
         self._mrcm.set_snomed_client(self._snomed_client)
 
         logger.info(
-            "ConceptExtractor initialized: SNOMED API=%s, synonyms=%d",
-            self._snomed_config.base_url,
+            "ConceptExtractor initialized: SNOMED %s, synonyms=%d",
+            client_info,
             len(self._synonyms),
         )
 
@@ -200,7 +242,9 @@ class ConceptExtractor:
 
     @property
     def snomed_api_url(self) -> str:
-        """Get the SNOMED API base URL."""
+        """Get the SNOMED API base URL or gRPC address."""
+        if self._use_grpc:
+            return self._grpc_config.grpc_address
         return self._snomed_config.base_url
 
     @property
@@ -212,6 +256,108 @@ class ConceptExtractor:
     def mrcm_attribute_count(self) -> int:
         """Get the number of MRCM attributes."""
         return self._mrcm.attribute_count
+
+    @property
+    def is_grpc(self) -> bool:
+        """Check if using gRPC client."""
+        return self._use_grpc
+
+    # =========================================================================
+    # Enhanced gRPC-specific methods
+    # =========================================================================
+
+    async def get_concept(self, concept_id: str) -> SnomedConcept | None:
+        """Get a concept by ID.
+
+        Args:
+            concept_id: SNOMED concept ID.
+
+        Returns:
+            SnomedConcept or None if not found.
+        """
+        if self._use_grpc and hasattr(self._snomed_client, "get_concept"):
+            return await self._snomed_client.get_concept(concept_id)
+        return None
+
+    async def execute_ecl(
+        self,
+        ecl: str,
+        limit: int = 100,
+        include_details: bool = True,
+    ) -> list[SnomedConcept]:
+        """Execute an ECL expression and return matching concepts.
+
+        This method is only available when using the gRPC client.
+
+        Args:
+            ecl: ECL expression (e.g., "<< 73211009" for descendants of diabetes).
+            limit: Maximum number of results.
+            include_details: Whether to include concept details.
+
+        Returns:
+            List of matching SNOMED concepts.
+
+        Raises:
+            NotImplementedError: If not using gRPC client.
+        """
+        if not self._use_grpc:
+            raise NotImplementedError("ECL execution requires gRPC client")
+
+        if hasattr(self._snomed_client, "execute_ecl"):
+            return await self._snomed_client.execute_ecl(ecl, limit, include_details)
+        return []
+
+    async def matches_ecl(self, concept_id: str, ecl: str) -> bool:
+        """Check if a concept matches an ECL expression.
+
+        This method is only available when using the gRPC client.
+
+        Args:
+            concept_id: The concept ID to test.
+            ecl: The ECL expression to match against.
+
+        Returns:
+            True if the concept matches the ECL expression.
+
+        Raises:
+            NotImplementedError: If not using gRPC client.
+        """
+        if not self._use_grpc:
+            raise NotImplementedError("ECL matching requires gRPC client")
+
+        if hasattr(self._snomed_client, "matches_ecl"):
+            return await self._snomed_client.matches_ecl(concept_id, ecl)
+        return False
+
+    async def is_descendant_of(self, concept_id: str, ancestor_id: str) -> bool:
+        """Check if a concept is a descendant of another concept.
+
+        Args:
+            concept_id: The concept to check.
+            ancestor_id: The potential ancestor concept.
+
+        Returns:
+            True if concept_id is a descendant of ancestor_id.
+        """
+        if hasattr(self._snomed_client, "is_descendant_of"):
+            return await self._snomed_client.is_descendant_of(concept_id, ancestor_id)
+
+        # Fallback to ancestor lookup
+        ancestors = await self.get_ancestors(concept_id)
+        return ancestor_id in ancestors
+
+    async def get_parents(self, concept_id: str) -> list[SnomedConcept]:
+        """Get direct parent concepts.
+
+        Args:
+            concept_id: Concept ID to get parents for.
+
+        Returns:
+            List of parent concepts.
+        """
+        if self._use_grpc and hasattr(self._snomed_client, "get_parents"):
+            return await self._snomed_client.get_parents(concept_id)
+        return []
 
     async def close(self) -> None:
         """Close the extractor and release resources."""

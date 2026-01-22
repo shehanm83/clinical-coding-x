@@ -1,0 +1,185 @@
+{/* Accessibility.mdx */}
+
+import { Meta } from '@storybook/blocks';
+
+<Meta title="Guidelines/Accessibility" />
+
+# Accessibility Guidelines
+
+This component library is designed with accessibility as a core principle.
+All components follow **WCAG 2.1 Level AA** guidelines.
+
+## Key Features
+
+### Keyboard Navigation
+
+All interactive components support full keyboard navigation:
+
+| Key | Action |
+|-----|--------|
+| `Tab` | Move focus to next focusable element |
+| `Shift + Tab` | Move focus to previous element |
+| `Enter` / `Space` | Activate buttons, select options |
+| `Escape` | Close modals, dropdowns, dismiss toasts |
+| `Arrow Keys` | Navigate within components (selects, menus) |
+| `Home` / `End` | Jump to first/last option |
+
+### Focus Management
+
+- **Visible focus indicators**: All focusable elements have clear `:focus-visible` styles
+- **Focus trap**: Modals trap focus within the dialog
+- **Focus restoration**: Focus returns to trigger element when modals close
+
+```css
+/* Focus indicator styles */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+```
+
+### Screen Reader Support
+
+Components include proper ARIA attributes:
+
+```html
+<!-- Button with loading state -->
+<tx-button loading aria-busy="true" aria-disabled="true">
+  Saving...
+</tx-button>
+
+<!-- Input with error -->
+<tx-input
+  aria-invalid="true"
+  aria-describedby="error-message"
+>
+</tx-input>
+
+<!-- Modal dialog -->
+<tx-modal
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="modal-title"
+>
+</tx-modal>
+```
+
+### Live Regions
+
+For dynamic content announcements, use the `tx-live-region` component:
+
+```typescript
+import { announce, announceError } from './components/core/tx-live-region';
+
+// Status update (polite)
+announce('Changes saved successfully');
+
+// Error announcement (assertive)
+announceError('Network connection lost');
+```
+
+### Color Contrast
+
+All color combinations meet WCAG AA contrast requirements:
+
+| Text Type | Minimum Ratio | Our Ratio |
+|-----------|---------------|-----------|
+| Normal text | 4.5:1 | ≥ 7:1 |
+| Large text | 3:1 | ≥ 4.5:1 |
+| UI components | 3:1 | ≥ 4.5:1 |
+
+**Note**: Never use color as the only indicator. Icons and text provide additional context.
+
+### Motion and Animation
+
+- **Reduced motion**: Respects `prefers-reduced-motion` media query
+- **No auto-playing animations**: Users control when animations occur
+- **Safe durations**: Animations are brief (150-400ms)
+
+```css
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+```
+
+## Component-Specific Guidelines
+
+### Forms
+
+- Labels are always visible and associated with inputs
+- Required fields marked with `aria-required` and visual indicator
+- Error messages use `role="alert"` for immediate announcement
+- Helper text linked via `aria-describedby`
+
+```html
+<tx-input
+  label="Email Address"
+  required
+  error
+  errorMessage="Please enter a valid email"
+>
+</tx-input>
+```
+
+### Modals
+
+- Focus moves to modal when opened
+- Focus trapped within modal
+- Escape key closes modal
+- Focus returns to trigger on close
+- Background content hidden from screen readers
+
+### Toasts
+
+- Use `role="alert"` for screen reader announcement
+- Auto-dismiss after reasonable duration (3s default)
+- Dismissible with close button and Escape key
+- Don't steal focus from current task
+
+### Navigation
+
+- Skip link provided for main content access
+- Current page indicated with `aria-current="page"`
+- Mobile menu toggle announces expanded state
+
+## Testing for Accessibility
+
+### Automated Testing
+
+The library includes axe-core tests for all components:
+
+```bash
+npm run test -- --grep "Accessibility"
+```
+
+### Manual Testing Checklist
+
+1. ✅ Navigate using only keyboard
+2. ✅ Test with screen reader (VoiceOver, NVDA)
+3. ✅ Verify color contrast ratios
+4. ✅ Test with zoom up to 200%
+5. ✅ Test with reduced motion preference
+6. ✅ Check focus order is logical
+7. ✅ Verify error messages are announced
+
+### Browser Extensions
+
+Recommended tools for testing:
+
+- [axe DevTools](https://www.deque.com/axe/) - Automated accessibility testing
+- [WAVE](https://wave.webaim.org/) - Web accessibility evaluation
+- [Lighthouse](https://developers.google.com/web/tools/lighthouse) - Built into Chrome DevTools
+
+## Resources
+
+- [WCAG 2.1 Guidelines](https://www.w3.org/WAI/WCAG21/quickref/)
+- [WAI-ARIA Authoring Practices](https://www.w3.org/WAI/ARIA/apg/)
+- [Inclusive Components](https://inclusive-components.design/)
+- [A11y Project Checklist](https://www.a11yproject.com/checklist/)
+
+---
+
+**Questions?** Open an issue in the repository for accessibility concerns.

@@ -1,0 +1,166 @@
+/**
+ * Typography Utilities
+ *
+ * Utility classes for typography following the design token system.
+ */
+
+/* ===== FONT FAMILIES ===== */
+
+.font-sans {
+  font-family: var(--font-sans);
+}
+
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+/* ===== FONT SIZES ===== */
+
+.text-xs {
+  font-size: var(--text-xs);
+  line-height: var(--line-height-normal);
+}
+
+.text-sm {
+  font-size: var(--text-sm);
+  line-height: var(--line-height-normal);
+}
+
+.text-base {
+  font-size: var(--text-base);
+  line-height: var(--line-height-normal);
+}
+
+.text-lg {
+  font-size: var(--text-lg);
+  line-height: var(--line-height-snug);
+}
+
+.text-xl {
+  font-size: var(--text-xl);
+  line-height: var(--line-height-snug);
+}
+
+.text-2xl {
+  font-size: var(--text-2xl);
+  line-height: var(--line-height-tight);
+}
+
+.text-3xl {
+  font-size: var(--text-3xl);
+  line-height: var(--line-height-tight);
+}
+
+/* ===== FONT WEIGHTS ===== */
+
+.font-normal {
+  font-weight: var(--font-weight-normal);
+}
+
+.font-medium {
+  font-weight: var(--font-weight-medium);
+}
+
+.font-semibold {
+  font-weight: var(--font-weight-semibold);
+}
+
+.font-bold {
+  font-weight: var(--font-weight-bold);
+}
+
+/* ===== LINE HEIGHTS ===== */
+
+.leading-tight {
+  line-height: var(--line-height-tight);
+}
+
+.leading-snug {
+  line-height: var(--line-height-snug);
+}
+
+.leading-normal {
+  line-height: var(--line-height-normal);
+}
+
+.leading-relaxed {
+  line-height: var(--line-height-relaxed);
+}
+
+/* ===== TEXT COLORS ===== */
+
+.text-primary {
+  color: var(--color-text-primary);
+}
+
+.text-secondary {
+  color: var(--color-text-secondary);
+}
+
+.text-muted {
+  color: var(--color-text-muted);
+}
+
+.text-success {
+  color: var(--color-success);
+}
+
+.text-warning {
+  color: var(--color-warning);
+}
+
+.text-error {
+  color: var(--color-error);
+}
+
+.text-info {
+  color: var(--color-info);
+}
+
+/* ===== CODE TYPOGRAPHY ===== */
+
+.code-sm {
+  font-family: var(--font-mono);
+  font-size: var(--code-sm);
+}
+
+.code-base {
+  font-family: var(--font-mono);
+  font-size: var(--code-base);
+}
+
+.code-lg {
+  font-family: var(--font-mono);
+  font-size: var(--code-lg);
+}
+
+/* ===== TEXT ALIGNMENT ===== */
+
+.text-left {
+  text-align: left;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+/* ===== TEXT OVERFLOW ===== */
+
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.break-words {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.break-all {
+  word-break: break-all;
+}

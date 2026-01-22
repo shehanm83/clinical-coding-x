@@ -20,6 +20,7 @@ from concept_extractor.core.models import AttributeDefinition, AttributeValue
 
 if TYPE_CHECKING:
     from concept_extractor.core.snomed_client import SnomedClient
+    from concept_extractor.core.snomed_grpc_client import SnomedGrpcClient
 
 logger = logging.getLogger(__name__)
 
@@ -54,13 +55,13 @@ class MrcmConfigProvider:
         self._config_path = Path(config_path)
         self._data: dict[str, Any] = {}
         self._loaded = False
-        self._snomed_client: SnomedClient | None = None
+        self._snomed_client: SnomedClient | SnomedGrpcClient | None = None
 
-    def set_snomed_client(self, client: SnomedClient) -> None:
+    def set_snomed_client(self, client: SnomedClient | SnomedGrpcClient) -> None:
         """Set SNOMED client for dynamic hierarchy checks.
 
         Args:
-            client: Initialized SnomedClient instance.
+            client: Initialized SnomedClient or SnomedGrpcClient instance.
         """
         self._snomed_client = client
         logger.info("MRCM provider: SNOMED client set, dynamic checks enabled")

@@ -1,0 +1,136 @@
+{/* Introduction.mdx */}
+
+import { Meta } from '@storybook/blocks';
+
+<Meta title="Introduction" />
+
+# Clinical Coding UI Component Library
+
+Welcome to the **TerminologyX Clinical Coding UI** component library documentation.
+
+This library provides a comprehensive set of Lit-based web components designed for building
+accessible, performant clinical coding applications.
+
+## Getting Started
+
+### Installation
+
+The components are part of the `clinical-coding-ui` application:
+
+```bash
+cd apps/clinical-coding-ui
+npm install
+npm run storybook
+```
+
+### Usage
+
+Import and use components directly:
+
+```typescript
+import 'clinical-coding-ui/components/core/tx-button.js';
+import 'clinical-coding-ui/components/core/tx-input.js';
+
+// In your Lit component or HTML
+html`
+  <tx-button variant="primary">Click Me</tx-button>
+  <tx-input label="Email" type="email"></tx-input>
+`;
+```
+
+## Component Categories
+
+### Core Components
+
+Essential UI elements for user interaction:
+
+- **[Button](/docs/core-button--docs)** - Primary action trigger with variants
+- **[Input](/docs/core-input--docs)** - Text input with validation
+- **[Textarea](/docs/core-textarea--docs)** - Multi-line text input with counter
+- **[Select](/docs/core-select--docs)** - Dropdown selection with keyboard nav
+- **[Modal](/docs/core-modal--docs)** - Dialog with focus trap
+- **[Toast](/docs/core-toast--docs)** - Temporary notifications
+- **[Alert](/docs/core-alert--docs)** - Inline feedback messages
+
+### Layout Components
+
+Structural primitives for consistent layouts:
+
+- **[Card](/docs/layout-card--docs)** - Elevated surface container
+- **[Stack](/docs/layout-stack--docs)** - Vertical flex layout
+- **[Inline](/docs/layout-stack--inline-basic)** - Horizontal flex layout
+- **[Container](/docs/layout-stack--container)** - Width-constrained wrapper
+- **[Divider](/docs/layout-stack--divider)** - Visual separator
+
+## Design Principles
+
+### Accessibility First
+
+All components follow WCAG 2.1 AA guidelines:
+
+- Proper ARIA attributes and roles
+- Keyboard navigation support
+- Focus management and visible indicators
+- Screen reader announcements
+- Color contrast compliance
+
+### Consistent Design Tokens
+
+The library uses CSS custom properties for consistent theming:
+
+```css
+/* Colors */
+--color-primary: #2563EB;
+--color-surface: #FFFFFF;
+--color-text-primary: #111827;
+
+/* Spacing (4px base) */
+--space-1: 4px;
+--space-2: 8px;
+--space-4: 16px;
+
+/* Typography */
+--font-sans: 'Inter', system-ui, sans-serif;
+--text-sm: 14px;
+--text-base: 16px;
+```
+
+### Dark Mode Support
+
+All components support both light and dark themes:
+
+```html
+<!-- Light mode (default) -->
+<html data-theme="light">
+
+<!-- Dark mode -->
+<html data-theme="dark">
+```
+
+### Responsive Design
+
+Components adapt to different screen sizes:
+
+- Mobile-first approach
+- Responsive breakpoints: 640px, 768px, 1024px, 1280px
+- Responsive props like `gap-md`, `gap-lg` for layout components
+
+## Technology Stack
+
+- **Lit 3** - Fast, lightweight web components
+- **TypeScript** - Type-safe development
+- **Vite** - Modern build tooling
+- **Tailwind CSS 4** - Utility-first CSS (optional)
+
+## Contributing
+
+See the project README for contribution guidelines. Key points:
+
+1. Follow the established component patterns
+2. Include comprehensive accessibility support
+3. Write stories for all component states
+4. Add tests for new functionality
+
+---
+
+Built with ❤️ for healthcare professionals by the TerminologyX team.

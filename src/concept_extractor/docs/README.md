@@ -1,14 +1,16 @@
 # Concept Extractor Documentation
 
-This module extracts clinical concepts from text using SNOMED CT terminology via the snomed-service service.
+This module extracts clinical concepts from text using SNOMED CT terminology via gRPC-based snomed-service with full ECL (Expression Constraint Language) support.
 
 ## Table of Contents
 
 1. [Overview](#overview)
 2. [Architecture](#architecture)
 3. [Components](#components)
-4. [Data Flow](#data-flow)
-5. [Configuration](#configuration)
+4. [Key Features](#key-features)
+5. [Data Flow](#data-flow)
+6. [Configuration](#configuration)
+7. [Quick Start](#quick-start)
 
 ---
 
@@ -16,38 +18,53 @@ This module extracts clinical concepts from text using SNOMED CT terminology via
 
 The Concept Extractor is a **zero-hallucination** clinical terminology service. It maps clinical text to SNOMED CT concepts using:
 
-- **Vector similarity search** - Semantic matching via embeddings
+- **Text search** - Lexical matching via gRPC SearchService
+- **ECL queries** - Expression Constraint Language for complex SNOMED queries
 - **Synonym expansion** - Lay term to medical term mapping
-- **Hierarchy traversal** - Parent/child/ancestor relationships
+- **Hierarchy traversal** - Parent/child/ancestor/descendant relationships
 - **MRCM validation** - Attribute applicability checking
 
-**NO LLM is used** - All operations are deterministic database queries or vector similarity searches.
+**NO LLM is used** - All operations are deterministic database queries.
+
+### What's New: gRPC + ECL Support
+
+| Feature | Description |
+|---------|-------------|
+| **gRPC Transport** | Fast binary protocol instead of HTTP/JSON |
+| **ECL Execution** | Run complex SNOMED queries like `<< 73211009` |
+| **Native Subsumption** | Check hierarchy without fetching all ancestors |
+| **Batch Operations** | Get multiple concepts in one call |
 
 ---
 
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                     ConceptExtractor                            │
-│  (Main orchestrator - extractor.py)                             │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────────┐ │
-│  │  Synonym    │  │   SNOMED    │  │      MRCM Config        │ │
-│  │  Lookup     │  │   Client    │  │      Provider           │ │
-│  │             │  │             │  │                         │ │
-│  │ CSV-based   │  │ HTTP calls  │  │ JSON-based attribute    │ │
-│  │ lay→medical │  │ to snomed-service   │  │ range validation        │ │
-│  └──────┬──────┘  └──────┬──────┘  └───────────┬─────────────┘ │
-│         │                │                     │               │
-└─────────┼────────────────┼─────────────────────┼───────────────┘
-          │                │                     │
-          ▼                ▼                     │
-   ┌────────────┐   ┌────────────┐              │
-   │ synonyms.  │   │  snomed-service    │◄─────────────┘
-   │ csv        │   │  (HTTP)    │  (dynamic hierarchy checks)
-   └────────────┘   └────────────┘
+┌─────────────────────────────────────────────────────────────────────┐
+│                        ConceptExtractor                              │
+│  (Main orchestrator - extractor.py)                                  │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  ┌─────────────┐  ┌──────────────────┐  ┌────────────────────────┐ │
+│  │  Synonym    │  │  SnomedGrpc      │  │    MRCM Config         │ │
+│  │  Lookup     │  │  Client          │  │    Provider            │ │
+│  │             │  │                  │  │                        │ │
+│  │ CSV-based   │  │ gRPC calls to    │  │ JSON-based attribute   │ │
+│  │ lay→medical │  │ snomed-service   │  │ range validation       │ │
+│  └──────┬──────┘  └────────┬─────────┘  └───────────┬────────────┘ │
+│         │                  │                        │              │
+└─────────┼──────────────────┼────────────────────────┼──────────────┘
+          │                  │                        │
+          ▼                  ▼                        │
+   ┌────────────┐   ┌─────────────────────────┐      │
+   │ synonyms.  │   │   snomed-service        │◄─────┘
+   │ csv        │   │   (gRPC :50051)         │  (dynamic hierarchy checks)
+   └────────────┘   │                         │
+                    │  ├─ ConceptService      │
+                    │  ├─ SearchService       │
+                    │  ├─ EclService          │
+                    │  └─ RefsetService       │
+                    └─────────────────────────┘
 ```
 
 ---
@@ -65,31 +82,36 @@ extractor = ConceptExtractor()
 
 # Match clinical text to SNOMED concepts
 result = await extractor.match_concepts("chest pain")
-for match in result.matches:
-    print(f"{match.term} ({match.concept_id}) - {match.similarity:.2f}")
 
-# Get concept hierarchy
-children = await extractor.get_children("29857009")  # Chest pain
+# Execute ECL query
+diabetes_types = await extractor.execute_ecl("<< 73211009")
 
-# Get valid MRCM attributes for a concept
+# Check subsumption
+is_diabetes = await extractor.is_descendant_of("44054006", "73211009")
+
+# Get valid MRCM attributes
 attributes = await extractor.get_valid_attributes(
     concept_id="29857009",
-    semantic_tag="finding",
-    concept_term="Chest pain"
+    semantic_tag="finding"
 )
 ```
 
-### 2. SnomedClient (`core/snomed_client.py`)
+### 2. SnomedGrpcClient (`core/snomed_grpc_client.py`)
 
-Async HTTP client for snomed-service. Provides:
+gRPC client for snomed-service. Provides:
 
 | Method | Description |
 |--------|-------------|
-| `match_concepts()` | Vector similarity search |
+| `match_concepts()` | Text-based concept search |
+| `get_concept()` | Get single concept by ID |
 | `get_children()` | Direct children in hierarchy |
 | `get_descendants()` | All descendants to depth N |
 | `get_ancestors()` | All ancestors (IS_A traversal) |
+| `get_parents()` | Direct parents (one level) |
 | `get_relationships()` | Concept relationships |
+| `execute_ecl()` | Execute ECL expression |
+| `matches_ecl()` | Check if concept matches ECL |
+| `is_descendant_of()` | Native subsumption check |
 
 ### 3. SynonymLookup (`core/synonyms.py`)
 
@@ -109,6 +131,53 @@ Provides MRCM attribute validation. See [MRCM.md](MRCM.md) for details.
 
 ---
 
+## Key Features
+
+### ECL (Expression Constraint Language)
+
+ECL enables powerful SNOMED queries:
+
+```python
+# Get all descendants of diabetes
+await extractor.execute_ecl("<< 73211009")
+
+# Get cardiac conditions (diseases with finding site = heart)
+await extractor.execute_ecl("<< 64572001 : 363698007 = << 80891009")
+
+# Check if concept matches ECL
+await extractor.matches_ecl("44054006", "<< 73211009")  # True
+```
+
+### Common ECL Patterns
+
+| Pattern | Meaning |
+|---------|---------|
+| `<< 73211009` | Descendants of diabetes (including self) |
+| `< 73211009` | Descendants (excluding self) |
+| `>> 73211009` | Ancestors (including self) |
+| `> 73211009` | Ancestors (excluding self) |
+| `A \| B` | Union (A OR B) |
+| `A AND B` | Intersection |
+| `A MINUS B` | Difference |
+
+### Hierarchy Navigation
+
+```python
+# Get children
+children = await extractor.get_children("73211009")
+
+# Get all descendants
+descendants = await extractor.get_descendants("73211009", depth=5)
+
+# Get ancestors
+ancestors = await extractor.get_ancestors("44054006")
+
+# Check subsumption
+is_child = await extractor.is_descendant_of("44054006", "73211009")
+```
+
+---
+
 ## Data Flow
 
 ### Concept Matching Flow
@@ -119,54 +188,39 @@ Provides MRCM attribute validation. See [MRCM.md](MRCM.md) for details.
                     ▼
 2. Synonym Expansion (optional)
    "shortness of breath" → "Dyspnea"
-   Expanded query: "patient has shortness of breath, Dyspnea"
+   Expanded query: "...shortness of breath, Dyspnea"
                     │
                     ▼
-3. snomed-service Vector Search
-   POST /api/v1/search
-   {
-     "text": "patient has shortness of breath, Dyspnea",
-     "top_k": 10
-   }
+3. gRPC Search Request
+   SearchService.Search(query, limit, active_only)
                     │
                     ▼
 4. Parse Response
    - Extract concept IDs, terms, FSNs
-   - Calculate similarity scores
-   - Determine match type (exact/lexical/vector)
+   - Parse semantic tag from FSN
+   - Build ConceptMatch objects
                     │
                     ▼
 5. Return MatchResult
-   [
-     ConceptMatch(concept_id="267036007", term="Dyspnea", similarity=0.95),
-     ConceptMatch(concept_id="230145002", term="Difficulty breathing", similarity=0.82),
-     ...
-   ]
+   [ConceptMatch(concept_id="267036007", term="Dyspnea", ...)]
 ```
 
-### MRCM Attribute Flow
+### ECL Execution Flow
 
 ```
-1. Input: concept_id="29857009" (Chest pain)
+1. Input: ecl="<< 73211009"
                     │
                     ▼
-2. Get concept's existing relationships
-   → Skip attributes already defined
+2. gRPC ECL Request
+   EclService.ExecuteEcl(ecl, limit, include_details)
                     │
                     ▼
-3. Check Finding site relationship
-   → If lateralizable body structure, include Laterality attribute
+3. snomed-service parses ECL,
+   traverses SNOMED hierarchy
                     │
                     ▼
-4. Check if chronic disease
-   → If chronic, exclude Clinical course attribute
-                    │
-                    ▼
-5. Return applicable attributes
-   [
-     AttributeDefinition(id="246112005", name="Severity"),
-     AttributeDefinition(id="272741003", name="Laterality"),
-   ]
+4. Return SnomedConcept[]
+   [SnomedConcept(id="44054006", term="Type 2 DM"), ...]
 ```
 
 ---
@@ -176,7 +230,11 @@ Provides MRCM attribute validation. See [MRCM.md](MRCM.md) for details.
 ### Environment Variables
 
 ```bash
-# SNOMED API (snomed-service)
+# gRPC Service (Primary)
+SNOMED_GRPC_ADDRESS=localhost:50051
+SNOMED_GRPC_TIMEOUT=30.0
+
+# HTTP API (Legacy fallback)
 SNOMED_API_BASE_URL=http://localhost:8010
 SNOMED_API_TIMEOUT=30.0
 ```
@@ -191,20 +249,69 @@ SNOMED_API_TIMEOUT=30.0
 ### Programmatic Configuration
 
 ```python
-from concept_extractor.core.config import SnomedApiConfig
+from concept_extractor import ConceptExtractor, SnomedGrpcConfig
 
-config = SnomedApiConfig(
-    base_url="http://custom-api:8010",
+# Custom gRPC config
+config = SnomedGrpcConfig(
+    grpc_address="snomed-server:50051",
     timeout=60.0
 )
 
-extractor = ConceptExtractor(snomed_config=config)
+# Use gRPC (default)
+extractor = ConceptExtractor(grpc_config=config)
+
+# Fall back to HTTP if needed
+extractor_http = ConceptExtractor(use_grpc=False)
+```
+
+---
+
+## Quick Start
+
+```python
+import asyncio
+from concept_extractor import ConceptExtractor
+
+async def main():
+    # Initialize extractor
+    extractor = ConceptExtractor()
+
+    # 1. Match clinical text
+    result = await extractor.match_concepts("severe chest pain")
+    for match in result.matches:
+        print(f"{match.term} ({match.concept_id})")
+
+    # 2. Execute ECL query
+    cardiac_conditions = await extractor.execute_ecl(
+        "<< 64572001 : 363698007 = << 80891009"
+    )
+    print(f"Found {len(cardiac_conditions)} cardiac conditions")
+
+    # 3. Check subsumption
+    is_finding = await extractor.matches_ecl(
+        "29857009",       # Chest pain
+        "<< 404684003"    # Clinical finding
+    )
+    print(f"Chest pain is a clinical finding: {is_finding}")
+
+    # 4. Get MRCM attributes
+    attrs = await extractor.get_valid_attributes(
+        concept_id="29857009",
+        semantic_tag="finding"
+    )
+    for attr in attrs:
+        print(f"Applicable: {attr.name}")
+
+    await extractor.close()
+
+asyncio.run(main())
 ```
 
 ---
 
 ## See Also
 
+- [INTEGRATION_PLAN.md](INTEGRATION_PLAN.md) - Comprehensive integration documentation
 - [SNOMED_CT.md](SNOMED_CT.md) - SNOMED CT terminology basics
 - [MRCM.md](MRCM.md) - Machine Readable Concept Model
 - [WELL_KNOWN_CONCEPTS.md](WELL_KNOWN_CONCEPTS.md) - Fixed concept IDs used

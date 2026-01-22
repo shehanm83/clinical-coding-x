@@ -11,6 +11,9 @@ dependencies = [
     "python-dotenv>=1.0.0",
     "jinja2>=3.1.0",
     "httpx>=0.27.0",
+    "fastapi>=0.109.0",
+    "uvicorn[standard]>=0.27.0",
+    "pydantic>=2.5.0",
 ]
 
 [build-system]
@@ -35,3 +38,4 @@ dev-dependencies = [
 
 [project.scripts]
 text-normalizer = "text_normalizer.__main__:main"
+coding-api = "coding_orchestrator.__main__:main"

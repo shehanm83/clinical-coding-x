@@ -1,0 +1,460 @@
+syntax = "proto3";
+
+package snomed;
+
+// SNOMED CT Concept
+message Concept {
+  uint64 id = 1;
+  uint32 effective_time = 2;
+  bool active = 3;
+  uint64 module_id = 4;
+  uint64 definition_status_id = 5;
+  string fsn = 6;  // Fully Specified Name
+}
+
+// SNOMED CT Description
+message Description {
+  uint64 id = 1;
+  uint64 concept_id = 2;
+  string language_code = 3;
+  uint64 type_id = 4;
+  string term = 5;
+  bool active = 6;
+}
+
+// SNOMED CT Relationship
+message Relationship {
+  uint64 id = 1;
+  uint64 source_id = 2;
+  uint64 destination_id = 3;
+  uint64 type_id = 4;
+  uint32 relationship_group = 5;
+  bool active = 6;
+  uint64 characteristic_type_id = 7;
+}
+
+// SNOMED CT Concrete Relationship (with literal values)
+message ConcreteRelationship {
+  uint64 id = 1;
+  uint64 source_id = 2;
+  string value = 3;            // The literal value as string
+  ConcreteValueType value_type = 4;
+  uint64 type_id = 5;
+  uint32 relationship_group = 6;
+  bool active = 7;
+}
+
+// Type of concrete value
+enum ConcreteValueType {
+  CONCRETE_VALUE_TYPE_UNSPECIFIED = 0;
+  CONCRETE_VALUE_TYPE_STRING = 1;
+  CONCRETE_VALUE_TYPE_INTEGER = 2;
+  CONCRETE_VALUE_TYPE_DECIMAL = 3;
+}
+
+// Reference set member
+message RefsetMember {
+  uint64 id = 1;
+  uint64 refset_id = 2;
+  uint64 referenced_component_id = 3;
+  bool active = 4;
+}
+
+// Association refset member (links source to target)
+message AssociationMember {
+  uint64 id = 1;
+  uint64 refset_id = 2;
+  uint64 source_component_id = 3;
+  uint64 target_component_id = 4;
+  bool active = 5;
+}
+
+// OWL expression axiom
+message OwlExpression {
+  uint64 id = 1;
+  uint64 refset_id = 2;
+  uint64 referenced_concept_id = 3;
+  string owl_expression = 4;
+  bool active = 5;
+}
+
+// Request/Response messages
+message GetConceptRequest {
+  uint64 id = 1;
+}
+
+message GetConceptResponse {
+  Concept concept = 1;
+  repeated Description descriptions = 2;
+}
+
+message GetParentsRequest {
+  uint64 id = 1;
+}
+
+message GetParentsResponse {
+  repeated Concept parents = 1;
+}
+
+message GetChildrenRequest {
+  uint64 id = 1;
+}
+
+message GetChildrenResponse {
+  repeated Concept children = 1;
+}
+
+message SearchRequest {
+  string query = 1;
+  int32 limit = 2;
+  bool active_only = 3;
+}
+
+message SearchResponse {
+  repeated Concept concepts = 1;
+}
+
+message IsDescendantOfRequest {
+  uint64 concept_id = 1;
+  uint64 ancestor_id = 2;
+}
+
+message IsDescendantOfResponse {
+  bool is_descendant = 1;
+}
+
+// ============================================================================
+// Extended Concept API Messages
+// ============================================================================
+
+// Get relationships for a concept
+message GetRelationshipsRequest {
+  uint64 concept_id = 1;
+  // Optional: filter to specific type IDs (empty = all types)
+  repeated uint64 type_filter = 2;
+  // Include incoming relationships (where concept is destination)
+  bool include_incoming = 3;
+}
+
+message GetRelationshipsResponse {
+  repeated Relationship outgoing = 1;
+  repeated Relationship incoming = 2;
+}
+
+// Batch get multiple concepts
+message GetConceptsBatchRequest {
+  repeated uint64 ids = 1;
+  // Whether to include descriptions
+  bool include_descriptions = 2;
+}
+
+message GetConceptsBatchResponse {
+  repeated Concept concepts = 1;
+  // IDs that were not found
+  repeated uint64 not_found = 2;
+}
+
+// Get preferred term for a concept in a specific language
+message GetPreferredTermRequest {
+  uint64 concept_id = 1;
+  // Language reference set ID (e.g., 900000000000509007 for US English)
+  uint64 language_refset_id = 2;
+}
+
+message GetPreferredTermResponse {
+  string term = 1;
+  bool found = 2;
+}
+
+// Get concrete relationships for a concept
+message GetConcreteRelationshipsRequest {
+  uint64 concept_id = 1;
+  // Optional: filter to specific type IDs
+  repeated uint64 type_filter = 2;
+}
+
+message GetConcreteRelationshipsResponse {
+  repeated ConcreteRelationship relationships = 1;
+}
+
+// Get OWL expressions for a concept
+message GetOwlExpressionsRequest {
+  uint64 concept_id = 1;
+}
+
+message GetOwlExpressionsResponse {
+  repeated OwlExpression expressions = 1;
+}
+
+// ============================================================================
+// Reference Set API Messages
+// ============================================================================
+
+// Get members of a reference set
+message GetRefsetMembersRequest {
+  uint64 refset_id = 1;
+  int32 limit = 2;   // Max results (0 = unlimited)
+  int32 offset = 3;  // Pagination offset
+}
+
+message GetRefsetMembersResponse {
+  repeated uint64 member_ids = 1;
+  uint64 total_count = 2;
+}
+
+// Reverse lookup: get all refsets containing a component
+message GetRefsetsForConceptRequest {
+  uint64 concept_id = 1;
+}
+
+message GetRefsetsForConceptResponse {
+  repeated uint64 refset_ids = 1;
+}
+
+// Get associations for a concept (historical relationships)
+message GetAssociationsRequest {
+  uint64 concept_id = 1;
+}
+
+message GetAssociationsResponse {
+  repeated AssociationMember associations = 1;
+}
+
+// Get replacement concept for an inactive concept
+message GetReplacementConceptRequest {
+  uint64 inactive_concept_id = 1;
+}
+
+message GetReplacementConceptResponse {
+  uint64 replacement_id = 1;
+  bool found = 2;
+}
+
+// Service definitions
+service ConceptService {
+  // Get a concept by ID
+  rpc GetConcept(GetConceptRequest) returns (GetConceptResponse);
+
+  // Get parent concepts (via IS_A relationships)
+  rpc GetParents(GetParentsRequest) returns (GetParentsResponse);
+
+  // Get child concepts (reverse IS_A)
+  rpc GetChildren(GetChildrenRequest) returns (GetChildrenResponse);
+
+  // Check if concept is descendant of another
+  rpc IsDescendantOf(IsDescendantOfRequest) returns (IsDescendantOfResponse);
+
+  // Get multiple concepts in a single request
+  rpc GetConceptsBatch(GetConceptsBatchRequest) returns (GetConceptsBatchResponse);
+
+  // Get relationships for a concept
+  rpc GetRelationships(GetRelationshipsRequest) returns (GetRelationshipsResponse);
+
+  // Get concrete relationships (with literal values)
+  rpc GetConcreteRelationships(GetConcreteRelationshipsRequest) returns (GetConcreteRelationshipsResponse);
+
+  // Get OWL expressions for a concept
+  rpc GetOwlExpressions(GetOwlExpressionsRequest) returns (GetOwlExpressionsResponse);
+
+  // Get preferred term for a specific language
+  rpc GetPreferredTerm(GetPreferredTermRequest) returns (GetPreferredTermResponse);
+
+  // Get associations (historical relationships)
+  rpc GetAssociations(GetAssociationsRequest) returns (GetAssociationsResponse);
+
+  // Get replacement concept for an inactive concept
+  rpc GetReplacementConcept(GetReplacementConceptRequest) returns (GetReplacementConceptResponse);
+}
+
+service SearchService {
+  // Search concepts by term
+  rpc Search(SearchRequest) returns (SearchResponse);
+}
+
+// Reference set query service
+service RefsetService {
+  // Get members of a reference set
+  rpc GetRefsetMembers(GetRefsetMembersRequest) returns (GetRefsetMembersResponse);
+
+  // Get all reference sets containing a concept (reverse lookup)
+  rpc GetRefsetsForConcept(GetRefsetsForConceptRequest) returns (GetRefsetsForConceptResponse);
+}
+
+// ============================================================================
+// ECL (Expression Constraint Language) Service
+// ============================================================================
+
+// Configuration for ECL query execution
+message EclExecutorConfig {
+  // Query timeout in milliseconds (0 = no timeout)
+  uint64 timeout_ms = 1;
+  // Enable parallel execution for large queries
+  bool parallel = 2;
+  // Enable query result caching
+  bool enable_cache = 3;
+}
+
+// Request to execute an ECL expression
+message ExecuteEclRequest {
+  // The ECL expression to execute (e.g., "<< 73211009")
+  string ecl = 1;
+  // Maximum number of results to return (0 = unlimited)
+  int32 limit = 2;
+  // Whether to include concept details (FSN) in results
+  bool include_details = 3;
+  // Optional executor configuration
+  EclExecutorConfig config = 4;
+}
+
+// Response containing ECL query results
+message ExecuteEclResponse {
+  // Matching concept IDs (if include_details is false)
+  repeated uint64 concept_ids = 1;
+  // Matching concepts with details (if include_details is true)
+  repeated Concept concepts = 2;
+  // Total count of matching concepts
+  uint64 total_count = 3;
+  // Execution time in milliseconds
+  uint64 execution_time_ms = 4;
+  // Whether results were truncated due to limit
+  bool truncated = 5;
+}
+
+// Request to check if a concept matches an ECL expression
+message MatchesEclRequest {
+  // The concept ID to test
+  uint64 concept_id = 1;
+  // The ECL expression to match against
+  string ecl = 2;
+}
+
+// Response indicating whether concept matches ECL
+message MatchesEclResponse {
+  // True if the concept matches the ECL expression
+  bool matches = 1;
+}
+
+// Request to get descendants with optional depth limit
+message GetDescendantsRequest {
+  // The concept ID to get descendants of
+  uint64 concept_id = 1;
+  // Maximum number of results (0 = unlimited)
+  int32 limit = 2;
+  // Whether to include the concept itself (descendant-or-self)
+  bool include_self = 3;
+}
+
+// Response containing descendant concepts
+message GetDescendantsResponse {
+  // Descendant concept IDs
+  repeated uint64 concept_ids = 1;
+  // Total count
+  uint64 total_count = 2;
+}
+
+// Request to get ancestors
+message GetAncestorsRequest {
+  // The concept ID to get ancestors of
+  uint64 concept_id = 1;
+  // Whether to include the concept itself (ancestor-or-self)
+  bool include_self = 2;
+}
+
+// Response containing ancestor concepts
+message GetAncestorsResponse {
+  // Ancestor concept IDs
+  repeated uint64 concept_ids = 1;
+  // Total count
+  uint64 total_count = 2;
+}
+
+// Request to explain an ECL query plan
+message ExplainEclRequest {
+  // The ECL expression to explain
+  string ecl = 1;
+}
+
+// Query plan step for explanation
+message QueryPlanStep {
+  // Type of operation (e.g., "Descendants", "Intersection", "Union")
+  string operation = 1;
+  // Human-readable description of this step
+  string description = 2;
+  // Estimated result count (if available)
+  uint64 estimated_count = 3;
+  // Child steps (for nested operations)
+  repeated QueryPlanStep children = 4;
+}
+
+// Response containing ECL query explanation
+message ExplainEclResponse {
+  // The parsed ECL expression (normalized form)
+  string parsed_ecl = 1;
+  // Query execution plan
+  QueryPlanStep plan = 2;
+  // Parse time in microseconds
+  uint64 parse_time_us = 3;
+}
+
+// Request to check subsumption between two concepts
+message IsSubsumedByRequest {
+  // The concept to check (potential descendant)
+  uint64 concept_id = 1;
+  // The potential ancestor concept
+  uint64 ancestor_id = 2;
+}
+
+// Response indicating subsumption result
+message IsSubsumedByResponse {
+  // True if concept_id is subsumed by (is-a) ancestor_id
+  bool is_subsumed = 1;
+  // Distance in hierarchy (-1 if not subsumed, 0 if same concept)
+  int32 distance = 2;
+}
+
+// Request to get direct parents (one level up)
+message GetDirectParentsRequest {
+  uint64 concept_id = 1;
+}
+
+// Response with direct parent concept IDs
+message GetDirectParentsResponse {
+  repeated uint64 parent_ids = 1;
+}
+
+// Request to get direct children (one level down)
+message GetDirectChildrenRequest {
+  uint64 concept_id = 1;
+}
+
+// Response with direct child concept IDs
+message GetDirectChildrenResponse {
+  repeated uint64 child_ids = 1;
+}
+
+// ECL query execution service
+service EclService {
+  // Execute an ECL expression and return matching concepts
+  rpc ExecuteEcl(ExecuteEclRequest) returns (ExecuteEclResponse);
+
+  // Check if a concept matches an ECL expression
+  rpc MatchesEcl(MatchesEclRequest) returns (MatchesEclResponse);
+
+  // Explain the query plan for an ECL expression (debugging/optimization)
+  rpc ExplainEcl(ExplainEclRequest) returns (ExplainEclResponse);
+
+  // Check if a concept is subsumed by another (direct subsumption test)
+  rpc IsSubsumedBy(IsSubsumedByRequest) returns (IsSubsumedByResponse);
+
+  // Get all descendants of a concept (optimized traversal)
+  rpc GetDescendants(GetDescendantsRequest) returns (GetDescendantsResponse);
+
+  // Get all ancestors of a concept (optimized traversal)
+  rpc GetAncestors(GetAncestorsRequest) returns (GetAncestorsResponse);
+
+  // Get direct parents (one level, via IS_A)
+  rpc GetDirectParents(GetDirectParentsRequest) returns (GetDirectParentsResponse);
+
+  // Get direct children (one level, reverse IS_A)
+  rpc GetDirectChildren(GetDirectChildrenRequest) returns (GetDirectChildrenResponse);
+}
